@@ -70,20 +70,20 @@ const Post = ({ post }) => {
       <div className="flex gap-2 items-start p-4 border-b border-gray-700">
         <div className="avatar">
           <Link
-            to={`/profile/${postOwner.username}`}
+            to={`/profile/${postOwner.userName}`}
             className="w-8 rounded-full overflow-hidden"
           >
-            <img src={postOwner.profileImg || "/avatar-placeholder.png"} />
+            <img src={postOwner.profileImg || `https://robohash.org/${postOwner.userName}?set=set4`} />
           </Link>
         </div>
         <div className="flex flex-col flex-1">
           <div className="flex gap-2 items-center">
-            <Link to={`/profile/${postOwner.username}`} className="font-bold">
+            <Link to={`/profile/${postOwner.userName}`} className="font-bold">
               {postOwner.fullName}
             </Link>
             <span className="text-gray-700 flex gap-1 text-sm">
-              <Link to={`/profile/${postOwner.username}`}>
-                @{postOwner.username}
+              <Link to={`/profile/${postOwner.userName}`}>
+                @{postOwner.userName}
               </Link>
               <span>·</span>
               <span>{formattedDate}</span>
@@ -146,7 +146,7 @@ const Post = ({ post }) => {
                             <img
                               src={
                                 comment.user.profileImg ||
-                                "/avatar-placeholder.png"
+                                `https://robohash.org/${postOwner.userName}?set=set4`
                               }
                             />
                           </div>
@@ -157,7 +157,7 @@ const Post = ({ post }) => {
                               {comment.user.fullName}
                             </span>
                             <span className="text-gray-700 text-sm">
-                              @{comment.user.username}
+                              @{comment.user.userName}
                             </span>
                           </div>
                           <div className="text-sm">{comment.text}</div>
