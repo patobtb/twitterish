@@ -1,4 +1,13 @@
-import { useRef, useState } from "react";
+import { 
+  useRef,
+  useState
+} from "react";
+import { 
+  useMutation,
+  useQueryClient,
+  useQuery
+} from "@tanstack/react-query"
+import { toast } from "react-hot-toast"
 
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
@@ -7,19 +16,44 @@ import { IoCloseSharp } from "react-icons/io5";
 const CreatePost = () => {
   const [text, setText] = useState("");
   const [img, setImg] = useState(null);
-
   const imgRef = useRef(null);
 
-  const isPending = false;
-  const isError = false;
+  const {data: authUser} = useQuery({queryKey: ["authUser"]});
+  const queryClient = useQueryClient();
 
-  const data = {
-    profileImg: "https://robohash.org/avatar?set=set4",
-  };
+  const {mutate, isPending, isError, error} = useMutation({
+    mutationFn: async ({text, img}) => {
+      try {
+        const response = await fetch("/api/posts/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({text, img}),
+        });
+        
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Could not create post");
+        }
+
+        console.log(data);
+        return data;
+      } catch (error) {
+        console.log(error.message);
+        throw new Error(error);
+      }
+    }, onSuccess: () => {
+      setText("");
+      setImg(null);
+      toast.success("Post created successfully");
+      queryClient.invalidateQueries({queryKey: ["posts"]});
+    }
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Post created successfully");
+    mutate({text, img});
   };
 
   const handleImgChange = (e) => {
@@ -38,7 +72,7 @@ const CreatePost = () => {
       <div className="avatar">
         <div className="w-8 rounded-full">
           <img
-            src={data.profileImg || "https://robohash.org/placeholder?set=set4"}
+            src={authUser.profileImg || `https://robohash.org/${authUser.userName}?set=set4`}
           />
         </div>
       </div>
@@ -84,7 +118,7 @@ const CreatePost = () => {
             {isPending ? "Posting..." : "Post"}
           </button>
         </div>
-        {isError && <div className="text-red-500">Something went wrong</div>}
+        {isError && <div className="text-red-500">{error.message}</div>}
       </form>
     </div>
   );
