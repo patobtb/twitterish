@@ -37,8 +37,8 @@ const Sidebar = () => {
     },
     onSuccess: () => {
       toast.success("Logged out successfully");
-	  // Invalidate the authUser query to refetch the data from the server and update the UI
-	  queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      // Invalidate the authUser query to refetch the data from the server and update the UI
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 
