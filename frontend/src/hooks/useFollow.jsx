@@ -15,7 +15,7 @@ const useFollow = () => {
         });
 
         const data = await response.json();
-
+        
         if (!response.ok) {
           throw new Error(data.error || "An error occurred while following the user.");
         }
@@ -28,7 +28,7 @@ const useFollow = () => {
       }
     }, onSuccess: () => {
         Promise.all([
-            queryClient.invalidateQueries({queryKey: ["suggestUsers"]}),
+            queryClient.invalidateQueries({queryKey: ["suggestedUsers"]}),
             queryClient.invalidateQueries({queryKey: ["authUser"]})
         ])
     }, onError: (error) => {
@@ -39,3 +39,4 @@ const useFollow = () => {
 };
 
 export default useFollow;
+   
