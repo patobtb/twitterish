@@ -20,7 +20,7 @@ const Post = ({ post }) => {
   const {data: authUser} = useQuery({queryKey: ["authUser"]});
   const queryClient = useQueryClient();
 
-  const {mutate, isPending} = useMutation({
+  const {mutate: deletePost, isPending: isDeleting} = useMutation({
     mutationFn: async () => {
       try {
         const response = await fetch(`/api/posts/${post._id}`, {
@@ -29,7 +29,7 @@ const Post = ({ post }) => {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Could not delete post");
+          throw new Error(data.error || "Could not delete post");
         }
 
         console.log(data);
@@ -46,8 +46,41 @@ const Post = ({ post }) => {
     }
   });
 
+  const {mutate: likePost, isPending: isLikeing} = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await fetch(`/api/posts/like/${post._id}`, {
+          method: "POST"
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Could not like post");
+        }
+
+        console.log(data);
+        return data;
+      } catch (error) {
+        console.log(error.message);
+        throw new Error(error);
+      }
+    }, onSuccess: (updatedLikes) => {
+      queryClient.setQueryData(["posts"], (oldPosts) => {
+        return oldPosts.map((oldPost) => {
+          if(oldPost._id === post._id) {
+            return {...oldPost, likes: updatedLikes};
+          }
+          return oldPost;
+        });
+      });
+    }, onError: (error) => {
+      console.log(error.message);
+      toast.error(error.message);
+    }
+  });
+
   const postOwner = post.user;
-  const isLiked = false;
+  const isLiked = post.likes.includes(authUser._id);
 
   const isMyPost = authUser._id === post.user._id;
 
@@ -56,14 +89,17 @@ const Post = ({ post }) => {
   const isCommenting = false;
 
   const handleDeletePost = () => {
-    mutate();
+    deletePost();
   };
 
   const handlePostComment = (e) => {
     e.preventDefault();
   };
 
-  const handleLikePost = () => {};
+  const handleLikePost = () => {
+    if(isLikeing) return;
+    likePost();
+  };
 
   return (
     <>
@@ -90,12 +126,12 @@ const Post = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-                {!isPending && (
+                {!isDeleting && (
                 <FaTrash
                   className="cursor-pointer hover:text-red-500"
                   onClick={handleDeletePost}
                 />)}
-                {isPending && (
+                {isDeleting && (
                   <LoadingSpinner size="sm" />
                 )}
               </span>
@@ -177,7 +213,7 @@ const Post = ({ post }) => {
                     />
                     <button className="btn btn-primary rounded-full btn-sm text-white px-4">
                       {isCommenting ? (
-                        <span className="loading loading-spinner loading-md"></span>
+                        <LoadingSpinner size="sm" />
                       ) : (
                         "Post"
                       )}
@@ -198,16 +234,17 @@ const Post = ({ post }) => {
                 className="flex gap-1 items-center group cursor-pointer"
                 onClick={handleLikePost}
               >
-                {!isLiked && (
+                {isLikeing && <LoadingSpinner size="sm" />}
+                {!isLiked && !isLikeing && (
                   <FaRegHeart className="w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500" />
                 )}
-                {isLiked && (
+                {isLiked && !isLikeing && (
                   <FaRegHeart className="w-4 h-4 cursor-pointer text-pink-500 " />
                 )}
 
                 <span
-                  className={`text-sm text-slate-500 group-hover:text-pink-500 ${
-                    isLiked ? "text-pink-500" : ""
+                  className={`text-sm  group-hover:text-pink-500 ${
+                    isLiked ? "text-pink-500" : "text-slate-500"
                   }`}
                 >
                   {post.likes.length}
