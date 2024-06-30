@@ -31,12 +31,12 @@ const Posts = ({feedType, userName, userId}) => {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Could not fetch posts");
+          throw new Error(data.error || "Could not fetch posts");
         }
 
         return data;
       } catch (error) {
-        console.log(error.message);
+        console.log(error.error);
         throw new Error(error);
       }
     }
