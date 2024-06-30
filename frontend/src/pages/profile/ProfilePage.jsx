@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeleton/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
 import { formatMemberSinceDate } from "../../utils/date";
+import useFollow from "../../hooks/useFollow";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 import { POSTS } from "../../utils/db/dummy";
 
@@ -25,28 +28,78 @@ const ProfilePage = () => {
 
   const { userName } = useParams();
 
-  const isMyProfile = true;
+  const { follow, isPending } = useFollow();
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const queryClient = useQueryClient();
 
-const { data: user, isLoading, isRefetching, refetch} = useQuery({
-  queryKey: ["userProfile"],
-  queryFn: async () => {
-    try {
-      const response = await fetch(`/api/users/profile/${userName}`);
-      const data = await response.json();
+  const {
+    data: user,
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: async () => {
+      try {
+        const response = await fetch(`/api/users/profile/${userName}`);
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "An error occurred while fetching user profile");
+        if (!response.ok) {
+          throw new Error(
+            data.error || "An error occurred while fetching user profile"
+          );
+        }
+        console.log(data);
+        return data;
+      } catch (error) {
+        console.error(error);
+        throw new Error(error.message);
       }
-      console.log(data);
-      return data;
-    } catch (error) {
-      console.error(error);
-      throw new Error(error.message);
-    }
-  }
-});
+    },
+  });
 
-const memberSinceDate = formatMemberSinceDate(user?.createdAt);
+  const {mutate: updateProfile, isPending: isUpdatingProfile} = useMutation({
+    mutationFn: async () => {
+      try {
+        const response = await fetch("/api/users/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            coverImg,
+            profileImg,
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "An error occurred while updating the profile");
+        }
+
+        console.log(data);
+        return data;
+      } catch (error) {
+        console.error(error);
+        throw new Error(error.message);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Profile updated successfully");
+      Promise.all([
+        queryClient.invalidateQueries({queryKey: ["authUser"]}),
+        queryClient.invalidateQueries({queryKey: ["userProfile"]})
+      ])
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const isMyProfile = authUser._id === user?._id;
+  const memberSinceDate = formatMemberSinceDate(user?.createdAt);
+  const isFollowing = authUser?.following.includes(user?._id);
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -62,13 +115,13 @@ const memberSinceDate = formatMemberSinceDate(user?.createdAt);
 
   useEffect(() => {
     refetch();
-  }, [userName, refetch])
+  }, [userName, refetch]);
 
   return (
     <>
       <div className="flex-[4_4_0]  border-r border-gray-700 min-h-screen ">
         {/* HEADER */}
-        {isLoading || isRefetching && <ProfileHeaderSkeleton />}
+        {isLoading || (isRefetching && <ProfileHeaderSkeleton />)}
         {!isLoading && !isRefetching && !user && (
           <p className="text-center text-lg mt-4">User not found</p>
         )}
@@ -138,21 +191,23 @@ const memberSinceDate = formatMemberSinceDate(user?.createdAt);
                 </div>
               </div>
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal />}
+                {isMyProfile && <EditProfileModal authUser={authUser} />}
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
-                    onClick={() => alert("Followed successfully")}
+                    onClick={() => follow(user?._id)}
                   >
-                    Follow
+                    {isPending && <LoadingSpinner />}
+                    {!isPending && isFollowing && "Unfollow"}
+                    {!isPending && !isFollowing && "Follow"}
                   </button>
                 )}
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => alert("Profile updated successfully")}
+                    onClick={() => updateProfile()}
                   >
-                    Update
+                    {isUpdatingProfile ? <LoadingSpinner /> : "Update"}
                   </button>
                 )}
               </div>
@@ -227,7 +282,7 @@ const memberSinceDate = formatMemberSinceDate(user?.createdAt);
             </>
           )}
 
-          <Posts feedType={feedType} userName={userName} userId={user?._id}/>
+          <Posts feedType={feedType} userName={userName} userId={user?._id} />
         </div>
       </div>
     </>
