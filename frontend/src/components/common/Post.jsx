@@ -118,9 +118,6 @@ const Post = ({ post }) => {
   
   });
 
-
-
-
   const handleDeletePost = () => {
     deletePost();
   };

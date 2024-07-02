@@ -1,13 +1,7 @@
-import { 
-  useRef,
-  useState
-} from "react";
-import { 
-  useMutation,
-  useQueryClient,
-  useQuery
-} from "@tanstack/react-query"
-import { toast } from "react-hot-toast"
+import { useRef, useState } from "react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 import { CiImageOn } from "react-icons/ci";
 import { BsEmojiSmileFill } from "react-icons/bs";
@@ -18,20 +12,20 @@ const CreatePost = () => {
   const [img, setImg] = useState(null);
   const imgRef = useRef(null);
 
-  const {data: authUser} = useQuery({queryKey: ["authUser"]});
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const queryClient = useQueryClient();
 
-  const {mutate, isPending, isError, error} = useMutation({
-    mutationFn: async ({text, img}) => {
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: async ({ text, img }) => {
       try {
         const response = await fetch("/api/posts/create", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({text, img}),
+          body: JSON.stringify({ text, img }),
         });
-        
+
         const data = await response.json();
         if (!response.ok) {
           throw new Error(data.error || "Could not create post");
@@ -43,17 +37,18 @@ const CreatePost = () => {
         console.log(error.message);
         throw new Error(error);
       }
-    }, onSuccess: () => {
+    },
+    onSuccess: () => {
       setText("");
       setImg(null);
       toast.success("Post created successfully");
-      queryClient.invalidateQueries({queryKey: ["posts"]});
-    }
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutate({text, img});
+    mutate({ text, img });
   };
 
   const handleImgChange = (e) => {
@@ -72,7 +67,10 @@ const CreatePost = () => {
       <div className="avatar">
         <div className="w-8 rounded-full">
           <img
-            src={authUser.profileImg || `https://robohash.org/${authUser.userName}?set=set4`}
+            src={
+              authUser.profileImg ||
+              `https://robohash.org/${authUser.userName}?set=set4`
+            }
           />
         </div>
       </div>
@@ -115,7 +113,7 @@ const CreatePost = () => {
             onChange={handleImgChange}
           />
           <button className="btn btn-primary rounded-full btn-sm text-white px-4">
-            {isPending ? "Posting..." : "Post"}
+            {isPending ? <LoadingSpinner /> : "Post"}
           </button>
         </div>
         {isError && <div className="text-red-500">{error.message}</div>}

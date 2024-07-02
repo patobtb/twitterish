@@ -11,8 +11,6 @@ import useFollow from "../../hooks/useFollow";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useUpdateProfile from "../../hooks/useUpdateProfile";
 
-import { POSTS } from "../../utils/db/dummy";
-
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
@@ -30,6 +28,7 @@ const ProfilePage = () => {
 
   const { follow, isPending } = useFollow();
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const { data: posts } = useQuery({ queryKey: ["posts"] });
 
   const {
     data: user,
@@ -97,14 +96,14 @@ const ProfilePage = () => {
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{user?.fullName}</p>
                   <span className="text-sm text-slate-500">
-                    {POSTS?.length} posts
+                    {posts?.length} posts
                   </span>
                 </div>
               </div>
               {/* COVER IMG */}
               <div className="relative group/cover">
                 <img
-                  src={coverImg || user?.coverImg || "/cover.png"}
+                  src={coverImg || user?.coverImg || "https://picsum.photos/3840/1860"}
                   className="h-52 w-full object-cover"
                   alt="cover image"
                 />
@@ -189,7 +188,7 @@ const ProfilePage = () => {
 
                 <div className="flex gap-2 flex-wrap">
                   {user?.link && (
-                    <div className="flex gap-1 items-center ">
+                    <div className="flex gap-1 items-center">
                       <>
                         <FaLink className="w-3 h-3 text-slate-500" />
                         <a

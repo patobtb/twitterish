@@ -1,9 +1,5 @@
 import { Link } from "react-router-dom";
-import { 
-	useMutation, 
-	useQuery, 
-	useQueryClient 
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import XSvg from "../svgs/X";
@@ -42,7 +38,7 @@ const Sidebar = () => {
     },
   });
 
-  const {data} = useQuery({queryKey: ["authUser"]});
+  const { data } = useQuery({ queryKey: ["authUser"] });
 
   return (
     <div className="md:flex-[2_2_0] w-18 max-w-52">
@@ -87,7 +83,12 @@ const Sidebar = () => {
           >
             <div className="avatar hidden md:inline-flex">
               <div className="w-8 rounded-full">
-                <img src={data?.profileImg || `https://robohash.org/${data.userName}?set=set4`} />
+                <img
+                  src={
+                    data?.profileImg ||
+                    `https://robohash.org/${data.userName}?set=set4`
+                  }
+                />
               </div>
             </div>
             <div className="flex justify-between flex-1">
