@@ -61,6 +61,7 @@ const ProfilePage = () => {
   const isMyProfile = authUser._id === user?._id;
   const memberSinceDate = formatMemberSinceDate(user?.createdAt);
   const isFollowing = authUser?.following.includes(user?._id);
+  const link = `https://${user?.link}`
 
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
@@ -103,7 +104,7 @@ const ProfilePage = () => {
               {/* COVER IMG */}
               <div className="relative group/cover">
                 <img
-                  src={coverImg || user?.coverImg || "https://picsum.photos/3840/1860"}
+                  src={coverImg || user?.coverImg || `https://picsum.photos/1920/1080`}
                   className="h-52 w-full object-cover"
                   alt="cover image"
                 />
@@ -192,12 +193,12 @@ const ProfilePage = () => {
                       <>
                         <FaLink className="w-3 h-3 text-slate-500" />
                         <a
-                          href="https://youtube.com/@asaprogrammer_"
+                          href={link}
                           target="_blank"
-                          rel="noreferrer"
+                          rel="noreferrer noopener"
                           className="text-sm text-blue-500 hover:underline"
                         >
-                          youtube.com/@asaprogrammer_
+                          {user?.link}
                         </a>
                       </>
                     </div>

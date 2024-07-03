@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { 
-  useMutation,
-  useQueryClient
-} from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 import XSvg from "../../../components/svgs/X";
@@ -18,16 +15,16 @@ const LoginPage = () => {
   });
 
   const queryClient = useQueryClient();
- 
-  const {mutate, isPending, isError, error} = useMutation({
-    mutationFn: async({userName, password}) => {
+
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: async ({ userName, password }) => {
       try {
         const response = await fetch("/api/auth/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({userName, password})
+          body: JSON.stringify({ userName, password }),
         });
 
         const data = await response.json();
@@ -41,11 +38,12 @@ const LoginPage = () => {
         console.error(error.message);
         throw new Error(error);
       }
-    }, onSuccess: () => {
+    },
+    onSuccess: () => {
       toast.success("Logged in successfully");
       // Invalidate the authUser query to refetch the data from the server and update the UI
-      queryClient.invalidateQueries({queryKey: ["authUser"]});
-    }
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    },
   });
 
   const handleSubmit = (e) => {
